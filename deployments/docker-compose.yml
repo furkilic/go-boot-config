@@ -1,0 +1,4 @@
+version: '3'
+services:
+  go-boot-config:
+    image: go-boot-config:0.0.1

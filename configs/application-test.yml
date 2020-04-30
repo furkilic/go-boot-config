@@ -1,0 +1,4 @@
+go:
+  profile:
+    test:
+      yaml: profile-test-yaml

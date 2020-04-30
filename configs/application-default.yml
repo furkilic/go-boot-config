@@ -1,0 +1,4 @@
+go:
+  profile:
+    conf:
+      yaml: profile-default-yaml
