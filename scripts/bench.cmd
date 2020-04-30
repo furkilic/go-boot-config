@@ -2,4 +2,4 @@
 title %0
 set BASE_DIR=%~dp0..
 
-"%BASE_DIR%\gow.cmd" test -bench=. "%BASE_DIR%\..."
+"%BASE_DIR%\gow.cmd" test -run=XXX -bench=. "%BASE_DIR%\..."

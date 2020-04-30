@@ -1,7 +1,7 @@
 package main
 
 import (
-	gobootconfig "go-boot-config/pkg/go-boot-config"
+	gobootconfig "github.com/furkilic/go-boot-config/pkg/go-boot-config"
 	"os"
 	"testing"
 )
