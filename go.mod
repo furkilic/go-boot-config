@@ -1,4 +1,4 @@
-module go-boot-config
+module github.com/furkilic/go-boot-config
 
 go 1.14
 
