@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	gobootconfig "github.com/furkilic/go-boot-config/pkg/go-boot-config"
+	"github.com/furkilic/go-boot-config/pkg/go-boot-config"
 	"log"
 )
 
