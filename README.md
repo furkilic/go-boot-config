@@ -99,8 +99,8 @@ my.uuid=${random.uuid}
 ## Accessing Command Line Properties
 
 By default, go-boot-config converts any command line option arguments 
-(that is, arguments starting with `--`, such as `--server.port=9000`) to a `property` and adds them to the 
-go-boot-config `Environment`. 
+(that is, arguments starting with `--`, such as `--server.port=9000` or `--server.port 9000` ) to a `property` and 
+adds them to the go-boot-config `Environment`. 
 As mentioned previously, command line properties always take precedence over other property sources.
 
 
@@ -173,3 +173,46 @@ app.nonexisting=${app.what:-mydefault} is not existing so 'mydefault' will be us
 
 `YAML` is a superset of JSON and, as such, is a convenient format for specifying hierarchical configuration data. 
 go-boot-config supports YAML as an alternative to properties by using `gopkg.in/yaml.v2`
+
+
+## Using YAML Instead of Properties
+
+`YAML` is a superset of JSON and, as such, is a convenient format for specifying hierarchical configuration data. 
+go-boot-config supports YAML as an alternative to properties by using `gopkg.in/yaml.v2`
+
+## Binding rules per property source
+
+### Set PropertySource
+
+Property Source | Simple | Slice 
+--- | --- | ---
+Command line arguments | nospacelowercase, camelCase, kebab-case, or underscore_notation | Comma-separated values or Mulitple declaration
+| | `--myapp.mystring=myvalue` | `--myapp.myslice=myvalue1,myvalue2` or `--myapp.myslice=myvalue1 --myapp.myslice=myvalue2`
+Environment Variables | Upper case format with underscore as the delimiter. `_` should not be used within a property name | Comma-separated values
+| | `MYAPP_MYSTRING=myvalue` | `MYAPP_MYSLICE=myvalue1,myvalue2`
+Properties Files | nospacelowercase, camelCase, kebab-case, or underscore_notation | Comma-separated values 
+| | `myapp.mystring=myvalue` | `myapp.myslice=myvalue1,myvalue2`
+YAML Files | nospacelowercase, camelCase, kebab-case, or underscore_notation | Standard YAML list syntax or comma-separated values
+| | `myapp: {mystring: myvalue}` | `myapp: {myslice: [myvalue1, myvalue2]}` 
+
+
+### Get PropertySource
+
+To retrieve the property `nospacelowercase`is recommended
+```go
+gobootconfig.GetString("myapp.mystring")
+// Works with : 
+// myapp.mystring
+// my-app.my-string
+// myApp.myString
+// my_app.my_string
+// MYAPP_MYSTRING
+```
+
+If you want to retrieve a specific index of a list value, you can use standard list syntax using `[index]`
+```go
+// myapp.myslice=val1,val2,val3
+gobootconfig.GetString("myapp.myslice[1]")
+// Will return : 
+// val2
+```
