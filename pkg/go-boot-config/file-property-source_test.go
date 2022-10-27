@@ -220,7 +220,7 @@ func Test_loadAllFrom(t *testing.T) {
 	}{
 		{"Nothing", createMap(), args{createArr(), "test", createArr(), true, parseProperties}, nil, true},
 		{"Properties From File Default", createMap(goConfigLocation, "../../test/default-properties/application.properties"), args{createArr(), "test", createArr("properties"), false, parseProperties}, "default-properties", false},
-		//{"Properties From HTTP", createMap(goConfigLocation, "http://localhost:3000/application.properties"), args{createArr(), "test", createArr("properties"), false, parseProperties}, "http-properties", false},
+		{"Properties From HTTP", createMap(goConfigLocation, "http://localhost:3000/application.properties"), args{createArr(), "test", createArr("properties"), false, parseProperties}, "http-properties", false},
 	}
 	for _, tt := range tests {
 		_clear()
@@ -291,15 +291,15 @@ func Test_filerActiveProfiles(t *testing.T) {
 }
 
 func Test_loadFrom(t *testing.T) {
-	f := func(m map[string]interface{}) func(string, func(io.Reader, map[string]interface{})) map[string]interface{} {
-		return func(s string, i func(io.Reader, map[string]interface{})) map[string]interface{} {
-			return m
+	f := func(m map[string]interface{}) func(string, func(io.Reader, map[string]interface{})) (map[string]interface{}, error) {
+		return func(s string, i func(io.Reader, map[string]interface{})) (map[string]interface{}, error) {
+			return m, nil
 		}
 	}
 	type args struct {
 		path   string
 		source string
-		loader func(string, func(io.Reader, map[string]interface{})) map[string]interface{}
+		loader func(string, func(io.Reader, map[string]interface{})) (map[string]interface{}, error)
 		parser func(io.Reader, map[string]interface{})
 	}
 	tests := []struct {
@@ -333,16 +333,22 @@ func Test_loadFile(t *testing.T) {
 		read     func(io.Reader, map[string]interface{})
 	}
 	tests := []struct {
-		name string
-		args args
-		want map[string]interface{}
+		name    string
+		args    args
+		want    map[string]interface{}
+		wantErr bool
 	}{
-		{"None", args{"none.properties", parseProperties}, createMap()},
-		{"Simple", args{"../../test/default-properties/application.properties", parseProperties}, createMap("go.string", "default-properties")},
+		{"None", args{"none.properties", parseProperties}, createMap(), true},
+		{"Simple", args{"../../test/default-properties/application.properties", parseProperties}, createMap("go.string", "default-properties"), false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := loadFile(tt.args.filePath, tt.args.read); !reflect.DeepEqual(got, tt.want) {
+			got, err := loadFile(tt.args.filePath, tt.args.read)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("loadFile() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("loadFile() = %v, want %v", got, tt.want)
 			}
 		})
@@ -356,16 +362,22 @@ func Test_loadHttp(t *testing.T) {
 		read     func(io.Reader, map[string]interface{})
 	}
 	tests := []struct {
-		name string
-		args args
-		want map[string]interface{}
+		name    string
+		args    args
+		want    map[string]interface{}
+		wantErr bool
 	}{
-		{"None", args{"http://localhost:3000/mamamia.properties", parseProperties}, createMap()},
-		{"Simple", args{"http://localhost:3000//application.properties", parseProperties}, createMap("go.string", "http-properties")},
+		{"None", args{"http://localhost:3000/mamamia.properties", parseProperties}, createMap(), false},
+		{"Simple", args{"http://localhost:3000//application.properties", parseProperties}, createMap("go.string", "http-properties"), false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := loadHttp(tt.args.httpPath, tt.args.read); !reflect.DeepEqual(got, tt.want) {
+			got, err := loadHttp(tt.args.httpPath, tt.args.read)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("loadHttp() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("loadHttp() = %v, want %v", got, tt.want)
 			}
 		})

@@ -1,6 +1,7 @@
 package gobootconfig
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -97,35 +98,42 @@ func filerActiveProfiles(activeProfiles []string, profiles []string) []string {
 	return tmpProfiles
 }
 
-func loadFrom(path, source string, loader func(string, func(io.Reader, map[string]interface{})) map[string]interface{}, parser func(io.Reader, map[string]interface{})) {
-	configMap := loader(path, parser)
+func loadFrom(path, source string, loader func(string, func(io.Reader, map[string]interface{})) (map[string]interface{}, error), parser func(io.Reader, map[string]interface{})) {
+	configMap, err := loader(path, parser)
+	if err != nil {
+		log.Fatalf("Failed loading %s: %s", path, err)
+		return
+	}
 	for k, v := range configMap {
 		_addPropertySource(k, filePropertySource{source, path, k, v})
 	}
 }
 
-func loadFile(filePath string, read func(io.Reader, map[string]interface{})) map[string]interface{} {
+func loadFile(filePath string, read func(io.Reader, map[string]interface{})) (map[string]interface{}, error) {
 	configs := make(map[string]interface{})
 	if ok, _ := pathExists(filePath, false); ok {
 		file, err := os.Open(filePath)
 		if err != nil {
 			log.Fatalf("Failed opening file %s: %s", filePath, err)
+			return configs, err
 		}
 		defer file.Close()
 		read(file, configs)
+		return configs, nil
 	}
-	return configs
+	return configs, errors.New("path not found")
 }
 
-func loadHttp(httpPath string, read func(io.Reader, map[string]interface{})) map[string]interface{} {
+func loadHttp(httpPath string, read func(io.Reader, map[string]interface{})) (map[string]interface{}, error) {
 	configs := make(map[string]interface{})
 	resp, err := http.Get(httpPath)
 	if err != nil {
 		log.Fatalf("Failed opening http %s: %s", httpPath, err)
+		return configs, err
 	}
 	defer resp.Body.Close()
 	read(resp.Body, configs)
-	return configs
+	return configs, nil
 }
 
 func retrieveConfPath(profiles []string, extensions []string, forProfile bool) []string {
